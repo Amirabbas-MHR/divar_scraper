@@ -1,8 +1,6 @@
-import requests
 from urllib3 import disable_warnings
-from time import sleep, time_ns
-import json
-import re
+from modules.configs import *
+from modules.explorer import Explorer
 
 
 def check_category(category):
@@ -29,24 +27,12 @@ def main():
     check_category(category)
     check_districts(districts, city)
 
+    probe = Explorer(category, districts, city)
+    tokens = probe.explore(request_sleep=2, token_limit=100)
+
 
 if __name__ == "__main__":
     # disables unnecessary warnings
     disable_warnings()
 
-    # loading valid categories list
-    CATEGORY_FILE_PATH = 'config/categories.json'
-    with open(CATEGORY_FILE_PATH, 'r') as category_file:
-        VALID_CATEGORIES = json.load(category_file)['categories']
-
-    # loading valid enums list
-    ENUMS_FILE_PATH = 'config/tehran.json'
-    with open(ENUMS_FILE_PATH, 'r') as enums_file:
-        nears = json.load(enums_file)['nears']
-        VALID_ENUMS = [near['enum'] for near in nears]
-
-    # loading the mapper of category name to it's uri, used to send the initial get request
-    URI_SCHEME_FILE_PATH = 'config/uri_scheme.json'
-    with open(URI_SCHEME_FILE_PATH, 'r') as uri_scheme_file:
-        URI_SCHEMA = json.load(uri_scheme_file)['urischema']['display']
     main()
