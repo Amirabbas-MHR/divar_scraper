@@ -1,6 +1,8 @@
 from urllib3 import disable_warnings
 from modules.configs import *
 from modules.explorer import Explorer
+from modules.post_scraper import Post
+import time
 
 
 def check_category(category):
@@ -20,7 +22,7 @@ def check_districts(districts, city):
 
 
 def main():
-    category = 'guitar-bass-amplifier'
+    category = 'furniture-wood'
     districts = ['61', '54', '55', '56']
     city = 'tehran'
 
@@ -28,7 +30,19 @@ def main():
     check_districts(districts, city)
 
     probe = Explorer(category, districts, city)
-    tokens = probe.explore(request_sleep=2, token_limit=100)
+    tokens = probe.explore(request_sleep=2, token_limit=47)
+    print('\ntoken extraction complete. initiating data scraping... \n\n')
+    dataclasses = []
+    for token in tokens:
+        print(f"Scraping post {token}...")
+        post = Post(token)
+        done = post.scrape()
+        if done:
+            print(f"title: {post.persian_title}. extraction complete. sleeping...\n")
+            dataclasses.append(post)
+        else:
+            print("Extraction failed. logged in post_scraper.log")
+        time.sleep(2)
 
 
 if __name__ == "__main__":
