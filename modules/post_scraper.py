@@ -7,20 +7,21 @@ class Post:
     token: str
     persian_district: str = None
     category: str = None
+    parent_category: str = None
     phone_number: str = None
     persian_title: str = None
-    persian_subtitle: str = None
-    persian_description: str = None
-    url: str = None
-    location: tuple = None
     is_business: bool = False
+    location: tuple = None
+    persian_subtitle: str = None
+    url: str = None
     business_data: list = None
-    parent_category: str = None
     gparent_category: str = None
     city: str = None
     price: int = None
     persian_category: str = None
     persian_city: str = None
+    persian_description: str = None
+
 
     def __get_phone_number(self, auth_key):
         base_url = 'https://api.divar.ir/v8/postcontact/web/contact_info/'
