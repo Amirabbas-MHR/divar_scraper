@@ -2,6 +2,7 @@ from urllib3 import disable_warnings
 from modules.configs import *
 from modules.explorer import Explorer
 from modules.post_scraper import Post
+from modules.recorder import Recorder
 import time
 
 
@@ -29,20 +30,23 @@ def main():
     check_category(category)
     check_districts(districts, city)
 
+    recorder = Recorder('test1.csv')
+
     probe = Explorer(category, districts, city)
-    tokens = probe.explore(request_sleep=2, token_limit=47)
+    tokens = probe.explore(request_sleep=1, token_limit=100)
     print('\ntoken extraction complete. initiating data scraping... \n\n')
-    dataclasses = []
     for token in tokens:
         print(f"Scraping post {token}...")
         post = Post(token)
         done = post.scrape(AUTH)
         if done:
-            print(f"title: {post.persian_title}. extraction complete. sleeping...\n")
-            dataclasses.append(post)
+            print(f"title: {post.persian_title}. extraction complete. Recording...\n")
+            recorder.record(post)
+
         else:
             print("Extraction failed. logged in post_scraper.log")
-        time.sleep(2)
+        time.sleep(1)
+    recorder.flush()  # to commit any remaining posts
 
 
 if __name__ == "__main__":
