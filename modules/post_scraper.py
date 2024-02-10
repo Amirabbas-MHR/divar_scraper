@@ -20,11 +20,46 @@ class Post:
     persian_category: str = None
     persian_district: str = None
     persian_city: str = None
+    phone_number: str = None
 
-    def __get_phone_number(self) -> str:
-        pass
+    def __get_phone_number(self, auth_key):
+        base_url = 'https://api.divar.ir/v8/postcontact/web/contact_info/'
 
-    def scrape(self):
+        headers = {
+            'authority': 'api.divar.ir',
+            'accept': 'application/json, text/plain, */*',
+            'accept-language': 'en-US,en;q=0.9',
+            'authorization': f'Basic {auth_key}',
+            'origin': 'https://divar.ir',
+            'priority': 'u=1, i',
+            'referer': 'https://divar.ir/',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Linux"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-site',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/120.0.6099.216 Safari/537.36',
+        }
+        url = base_url + self.token
+        response = requests.get(url, headers=headers, verify=False)
+        json_data = response.json()
+        if response.status_code == 200:
+            try:
+                self.phone_number = json_data['widget_list'][0]['data']['action']['payload']['phone_number']
+                print(f"Post with token {self.token}: {self.phone_number}")
+            except:
+                print(f"Post with token {self.token} has hidden number.")
+        elif response.status_code == 401:
+            print("Authorization key expired/incorrect.")
+        else:
+            print(f"Unknown error occoured with code {response.status_code}: {response.text}")
+
+    def scrape(self, auth_key=None, get_phone_number=True) -> bool:
+        if get_phone_number and auth_key is None:
+            raise Exception("Please provide an auth key if get_phone_number is True")
+
         headers = {
             'authority': 'api.divar.ir',
             'accept': 'application/json-filled',
@@ -47,9 +82,9 @@ class Post:
 
         if response.status_code != 200:
             with open('post_scraper.log', 'a') as file:
-                file.write(f"request to {response.url} failed with {response.status_code} code. """
-                           "with text: {response.text}\n")
-                return 0
+                file.write(f"request to {response.url} failed with {response.status_code} code. "
+                           f"with text: {response.text} \n")
+                return False
             # raise Exception(f"request to {response.url} failed with {response.status_code} code.")
 
         data = response.json()
@@ -96,4 +131,8 @@ class Post:
         self.persian_category = data['seo']['web_info']['category_slug_persian']
         self.persian_district = data['seo']['web_info']['district_persian']
         self.persian_city = data['seo']['web_info']['city_persian']
-        return 1
+
+        if get_phone_number:
+            self.__get_phone_number(auth_key)
+
+        return True
