@@ -36,7 +36,7 @@ def main():
     for token in tokens:
         print(f"Scraping post {token}...")
         post = Post(token)
-        done = post.scrape()
+        done = post.scrape(AUTH)
         if done:
             print(f"title: {post.persian_title}. extraction complete. sleeping...\n")
             dataclasses.append(post)
@@ -48,5 +48,4 @@ def main():
 if __name__ == "__main__":
     # disables unnecessary warnings
     disable_warnings()
-
     main()
