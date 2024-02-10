@@ -15,3 +15,7 @@ with open(ENUMS_FILE_PATH, 'r') as enums_file:
 URI_SCHEME_FILE_PATH = 'config/uri_scheme.json'
 with open(URI_SCHEME_FILE_PATH, 'r') as uri_scheme_file:
     URI_SCHEMA = json.load(uri_scheme_file)['urischema']['display']
+
+SECRET_PATH = 'config/secret.txt'
+with open(SECRET_PATH, 'r') as secret_file:
+    AUTH = secret_file.read()
