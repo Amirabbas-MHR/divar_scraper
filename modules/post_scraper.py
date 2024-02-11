@@ -1,32 +1,31 @@
 import requests
 from dataclasses import dataclass
-import logging as log
 from .configs import *
 from time import time
-
-log.basicConfig(filename=f"{LOGS_PATH}/{__name__}.log", level=log.INFO, format='%(asctime)s %(message)s',
-                datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 @dataclass
 class Post:
-    token: str
-    persian_district: str = None
-    category: str = None
-    parent_category: str = None
-    phone_number: str = None
-    persian_title: str = None
-    is_business: bool = False
-    location: tuple = None
-    persian_subtitle: str = None
-    url: str = None
-    business_data: list = None
-    gparent_category: str = None
-    city: str = None
-    price: int = None
-    persian_category: str = None
-    persian_city: str = None
-    persian_description: str = None
+    def __init__(self, logger, token):
+        self.token = token
+        self.persian_district: str = ''
+        self.category: str = ''
+        self.parent_category: str = ''
+        self.phone_number: str = ''
+        self.persian_title: str = ''
+        self.is_business: bool = False
+        self.location: tuple = ()
+        self.persian_subtitle: str = ''
+        self.url: str = ''
+        self.business_data: list = []
+        self.gparent_category: str = ''
+        self.city: str = ''
+        self.price: int = 0
+        self.persian_category: str = ''
+        self.persian_city: str = ''
+        self.persian_description: str = ''
+
+        self.logger = logger
 
     def __get_phone_number(self, auth_key):
         base_url = 'https://api.divar.ir/v8/postcontact/web/contact_info/'
@@ -56,15 +55,17 @@ class Post:
             try:
                 self.phone_number = json_data['widget_list'][0]['data']['action']['payload']['phone_number']
                 print(f"Post with token {self.token}: {self.phone_number}")
+                self.logger.info(f"Post <{self.token}> phone number extracted: {self.phone_number}", __name__)
             except:
+                self.logger.info(f"Post <{self.token}> phone number hidden.", __name__)
                 print(f"Post with token {self.token} has hidden number.")
         elif response.status_code == 401:
-            log.fatal("Authorization key expired/invalid")
+            self.logger.fatal("Authorization key for getting the phone number is expired/invalid", __name__)
             print("Authorization key expired/invalid")
         else:
             error_file_path = f"{LOGS_PATH}/{time()}-phoneNumberUnknownError.txt"  # inserting the unix time stamp to clearify
-            log.fatal(f"Unknown error occoured while extracting phone number with code {response.status_code}. "
-                      f"recording in {error_file_path}")
+            self.logger.fatal(f"Unknown error occoured while extracting phone number with code {response.status_code}. "
+                              f"recording in {error_file_path}", __name__)
             with open(error_file_path, 'w') as file:
                 file.write(response.text)
             print(f"Unknown error occoured with code {response.status_code}. Recording in {error_file_path}")
@@ -95,8 +96,8 @@ class Post:
 
         if response.status_code != 200:
             error_file_path = f"{LOGS_PATH}/{time()}-postScraperError.txt"  # inserting the unix time stamp to clearify
-            log.fatal(f"scraping {response.url} failed with code {response.status_code}. "
-                      f"recording in {error_file_path}")
+            self.logger.fatal(f"scraping {response.url} failed with code {response.status_code}. "
+                              f"recording in {error_file_path}", __name__)
             with open(error_file_path, 'w') as file:
                 file.write(response.text)
             print(f"Scraping post {self.token} failed.")
@@ -106,6 +107,8 @@ class Post:
         data = response.json()
         # sections stuff
         sections = data['sections']
+        self.logger.info(f"scraping post <{self.token}>")
+
         for section in sections:
             if section['section_name'] == "TITLE":
                 self.persian_title = section['widgets'][0]['data']['title']
@@ -149,5 +152,5 @@ class Post:
 
         if get_phone_number:
             self.__get_phone_number(auth_key)
-
+        self.logger.info(f"post <{self.token}> scraping complete.", __name__)
         return True
