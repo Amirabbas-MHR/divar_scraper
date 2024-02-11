@@ -27,13 +27,15 @@ def main():
     districts = ['61', '54', '55', '56']
     city = 'tehran'
 
+    # check if categories and districts are valid
     check_category(category)
     check_districts(districts, city)
 
-    recorder = Recorder('test1.csv')
+    recorder = Recorder('test1.csv')  # Recorder object init
 
-    probe = Explorer(category, districts, city)
-    tokens = probe.explore(request_sleep=1, token_limit=100)
+    probe = Explorer(category, districts, city)  # Explorer object init
+
+    tokens = probe.explore(request_sleep=1, token_limit=100)  # Explorer object extracts tokens
     print('\ntoken extraction complete. initiating data scraping... \n\n')
     for token in tokens:
         print(f"Scraping post {token}...")
