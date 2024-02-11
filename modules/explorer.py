@@ -2,7 +2,6 @@ import requests
 from time import sleep, time
 import re
 from .configs import *
-import logging as log
 
 
 class Explorer:
@@ -19,7 +18,7 @@ class Explorer:
         self.districts = districts
         self.category = category
         self.logger = logger
-        
+
     def __initial_lastPostDate(self) -> int:
         _cookies = {
             'did': '80dce4fa-1571-4f8b-b8ec-986b57261433',
