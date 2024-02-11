@@ -40,11 +40,12 @@ def main():
     probe = Explorer(logger, category, districts, city)  # Explorer object init
     logger.info(f"explorer initialized. searching in {category} - {city}: {districts}", __name__)
 
-    tokens = probe.explore(request_sleep=1, token_limit=20)  # Explorer object extracts tokens
+    tokens = probe.explore(request_sleep=1, token_limit=100)  # Explorer object extracts tokens
     logger.info(f"token extraction complete. a total of {len(tokens)} tokens extracted.", __name__)
 
     print('\ntoken extraction complete. initiating data scraping... \n\n')
     for token in tokens:
+        # TODO add the scraping post 10/120 or 15/120 or ... loading
         print(f"Scraping post {token}...")
         post = Post(logger, token)
         done = post.scrape(AUTH)
