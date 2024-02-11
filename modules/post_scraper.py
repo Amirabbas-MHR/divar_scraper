@@ -107,7 +107,7 @@ class Post:
         data = response.json()
         # sections stuff
         sections = data['sections']
-        self.logger.info(f"scraping post <{self.token}>")
+        self.logger.info(f"scraping post <{self.token}>", __name__)
 
         for section in sections:
             if section['section_name'] == "TITLE":
