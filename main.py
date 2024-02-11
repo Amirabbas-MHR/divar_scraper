@@ -3,8 +3,8 @@ from modules.configs import *
 from modules.explorer import Explorer
 from modules.post_scraper import Post
 from modules.recorder import Recorder
-import time
-
+from modules.logger import Logger
+from time import sleep
 
 def check_category(category):
     # check if category is valid
@@ -27,27 +27,36 @@ def main():
     districts = ['61', '54', '55', '56']
     city = 'tehran'
 
+    logger = Logger()  # initializing logger
+
     # check if categories and districts are valid
     check_category(category)
     check_districts(districts, city)
 
-    recorder = Recorder('test1.csv')  # Recorder object init
+    record_file = "test1.csv"
+    recorder = Recorder(logger, record_file)  # Recorder object init
+    logger.info(f"recorder initialized. recording in {record_file}", __name__)
 
-    probe = Explorer(category, districts, city)  # Explorer object init
+    probe = Explorer(logger, category, districts, city)  # Explorer object init
+    logger.info(f"explorer initialized. searching in {category} - {city}: {districts}", __name__)
 
-    tokens = probe.explore(request_sleep=1, token_limit=100)  # Explorer object extracts tokens
+    tokens = probe.explore(request_sleep=1, token_limit=20)  # Explorer object extracts tokens
+    logger.info(f"token extraction complete. a total of {len(tokens)} tokens extracted.", __name__)
+
     print('\ntoken extraction complete. initiating data scraping... \n\n')
     for token in tokens:
         print(f"Scraping post {token}...")
-        post = Post(token)
+        post = Post(logger, token)
         done = post.scrape(AUTH)
+
         if done:
             print(f"title: {post.persian_title}. extraction complete. Recording...\n")
             recorder.record(post)
-
         else:
-            print("Extraction failed. logged in post_scraper.log")
-        time.sleep(1)
+            print(f"post {token} scraping failed. check post_scraper logs.")
+
+        sleep(1)
+
     recorder.flush()  # to commit any remaining posts
 
 
