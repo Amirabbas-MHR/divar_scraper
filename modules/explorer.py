@@ -4,12 +4,9 @@ import re
 from .configs import *
 import logging as log
 
-log.basicConfig(filename=f"{LOGS_PATH}/{__name__}.log", level=log.INFO, format='%(asctime)s %(message)s',
-                datefmt='%m/%d/%Y %I:%M:%S %p')
-
 
 class Explorer:
-    def __init__(self, category: str, districts: list, city='tehran', ):
+    def __init__(self, logger, category: str, districts: list, city='tehran', ):
         """
         Explorer object. Handles methods on exploring and extracting data.
         params:
@@ -17,10 +14,12 @@ class Explorer:
             districts: list of enums . which is a code for divar for each district. go to tehran.json to read the enums
             city: tehran is ONLY supported now #TODO check the readme.txt for the problem of other cities.
         """
+
         self.city = city
         self.districts = districts
         self.category = category
-
+        self.logger = logger
+        
     def __initial_lastPostDate(self) -> int:
         _cookies = {
             'did': '80dce4fa-1571-4f8b-b8ec-986b57261433',
@@ -71,7 +70,7 @@ class Explorer:
                                 headers=_headers).text
 
         # Extracting the initial lastPostDate
-        pattern = r'"lastPXXXostDate":\s*(\d+)'
+        pattern = r'"lastPostDate":\s*(\d+)'
 
         # Search for the pattern in the response html string
         match = re.search(pattern, response)
@@ -79,11 +78,13 @@ class Explorer:
         # If match found, return the lastPostDate
         if match:
             self.initial_lastPostDate = match.group(1)
+            self.logger.info(f"Initial lastPostDate extraction successful: {self.initial_lastPostDate}", __name__)
             return int(self.initial_lastPostDate)
 
         # If the match is not found, error will be raised and response is saved in error_file_path
         error_file_path = f"{LOGS_PATH}/{time()}-lastPostDateError.txt"  # inserting the unix time stamp to clearify
-        log.fatal(f"Could not find the initial 'lastPostDate'. request response is logged in lastPostDateError.txt")
+        self.logger.fatal(f"Could not find the initial 'lastPostDate'. request response is logged in "
+                          f"lastPostDateError.txt", __name__)
         with open(error_file_path, 'w') as file:
             file.write(response)
         raise Exception(
@@ -200,10 +201,10 @@ class Explorer:
                 token = post['data']['action']['payload']['token']
                 # If a token is extracted twice, it means we are passing the lastPostDate incorrectly
                 if token in target_tokens:
-                    log.fatal(f"Token <{token}> is extracted twice.")
+                    self.logger.fatal(f"Token <{token}> is extracted twice.", __name__)
                     raise Exception(f"Token <{token}> is extracted twice. There seems to be a problem with pages"
                                     " or last_post_update parameter...")
-                log.info(f"Token <{token}> extracted.")
+                self.logger.info(f"Token <{token}> extracted.", __name__)
                 print(f"token {token} extracted.")
                 page_tokens.append(token)
 
