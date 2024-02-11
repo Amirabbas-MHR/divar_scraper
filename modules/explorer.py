@@ -1,7 +1,11 @@
 import requests
-from time import sleep
+from time import sleep, time
 import re
 from .configs import *
+import logging as log
+
+log.basicConfig(filename=f"{LOGS_PATH}/{__name__}.log", level=log.INFO, format='%(asctime)s %(message)s',
+                datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 class Explorer:
@@ -67,7 +71,7 @@ class Explorer:
                                 headers=_headers).text
 
         # Extracting the initial lastPostDate
-        pattern = r'"lastPostDate":\s*(\d+)'
+        pattern = r'"lastPXXXostDate":\s*(\d+)'
 
         # Search for the pattern in the response html string
         match = re.search(pattern, response)
@@ -77,13 +81,15 @@ class Explorer:
             self.initial_lastPostDate = match.group(1)
             return int(self.initial_lastPostDate)
 
-        # If the match is not found, error will be raised and response is saved in lastPostDateError.txt
-        with open('lastPostDateError.txt', 'w') as file:
+        # If the match is not found, error will be raised and response is saved in error_file_path
+        error_file_path = f"{LOGS_PATH}/{time()}-lastPostDateError.txt"  # inserting the unix time stamp to clearify
+        log.fatal(f"Could not find the initial 'lastPostDate'. request response is logged in lastPostDateError.txt")
+        with open(error_file_path, 'w') as file:
             file.write(response)
         raise Exception(
-            "Could not find the initial lastPostDate. logged the initial request response in lastPostDateError.txt...")
+            f"Could not find the initial lastPostDate. logged the initial request response in {error_file_path}")
 
-    def explore(self, request_sleep: int = 1, token_limit: int = 10000) -> list[str]:
+    def explore(self, request_sleep: int = 1, token_limit: int = 100) -> list[str]:
         """
         gets the available post tokens in the given category, city and districts.
         params:
@@ -139,7 +145,7 @@ class Explorer:
         # last_post_date should be set equal to last_post_date of the previous page.
         # so where do we get this 'last_post_date'? it is received in fetch request response of each page,
         # in address of response['last_post_date']
-        # not simple, but here is the code:
+        # not so easy, but here is the code:
 
         self.__initial_lastPostDate()  # getting the initial lastPostDate from the get request
         last_post_date = self.initial_lastPostDate  # initially set to initial lastPostDate
@@ -174,9 +180,14 @@ class Explorer:
             )
             # check if request was successful
             if response.status_code != 200:
+                error_file_path = f"{LOGS_PATH}/{time()}-getPostsPageError.txt"  # inserting the unix time stamp to  clearify
+                log.fatal(
+                    f"getting posts page failed with code {response.status_code}. response in: {error_file_path}")
+                with open(error_file_path, 'w') as file:
+                    file.write(response.text)
+                # TODO should this be raise an exception or just handle it another way?
                 raise Exception(
-                    f"request to f'https://api.divar.ir/v8/web-search/1/{self.category}'failed with"
-                    "status code {response.status_code}: {response.text}")
+                    f"Request to {response.url} failed. Response recorded {error_file_path}")
 
             result_json = response.json()['web_widgets']['post_list']
 
@@ -185,12 +196,14 @@ class Explorer:
             page_tokens = []
 
             for post in result_json:
-                # token can be used to access the post using https://divar.ir/v/<token> where all the information sits.
+                # token can be used to access the post using https://divar.ir/v/<token> where all the information lies.
                 token = post['data']['action']['payload']['token']
                 # If a token is extracted twice, it means we are passing the lastPostDate incorrectly
                 if token in target_tokens:
-                    raise Exception("A token is extracted twice. There seems to be a problem with pages"
+                    log.fatal(f"Token <{token}> is extracted twice.")
+                    raise Exception(f"Token <{token}> is extracted twice. There seems to be a problem with pages"
                                     " or last_post_update parameter...")
+                log.info(f"Token <{token}> extracted.")
                 print(f"token {token} extracted.")
                 page_tokens.append(token)
 
