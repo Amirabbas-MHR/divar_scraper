@@ -1,5 +1,11 @@
 import requests
 from dataclasses import dataclass
+import logging as log
+from .configs import *
+from time import time
+
+log.basicConfig(filename=f"{LOGS_PATH}/{__name__}.log", level=log.INFO, format='%(asctime)s %(message)s',
+                datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 @dataclass
@@ -21,7 +27,6 @@ class Post:
     persian_category: str = None
     persian_city: str = None
     persian_description: str = None
-
 
     def __get_phone_number(self, auth_key):
         base_url = 'https://api.divar.ir/v8/postcontact/web/contact_info/'
@@ -46,6 +51,7 @@ class Post:
         url = base_url + self.token
         response = requests.get(url, headers=headers, verify=False)
         json_data = response.json()
+
         if response.status_code == 200:
             try:
                 self.phone_number = json_data['widget_list'][0]['data']['action']['payload']['phone_number']
@@ -53,9 +59,15 @@ class Post:
             except:
                 print(f"Post with token {self.token} has hidden number.")
         elif response.status_code == 401:
-            print("Authorization key expired/incorrect.")
+            log.fatal("Authorization key expired/invalid")
+            print("Authorization key expired/invalid")
         else:
-            print(f"Unknown error occoured with code {response.status_code}: {response.text}")
+            error_file_path = f"{LOGS_PATH}/{time()}-phoneNumberUnknownError.txt"  # inserting the unix time stamp to clearify
+            log.fatal(f"Unknown error occoured while extracting phone number with code {response.status_code}. "
+                      f"recording in {error_file_path}")
+            with open(error_file_path, 'w') as file:
+                file.write(response.text)
+            print(f"Unknown error occoured with code {response.status_code}. Recording in {error_file_path}")
 
     def scrape(self, auth_key=None, get_phone_number=True) -> bool:
         if get_phone_number and auth_key is None:
@@ -82,14 +94,16 @@ class Post:
         self.url = response.url
 
         if response.status_code != 200:
-            with open('post_scraper.log', 'a') as file:
-                file.write(f"request to {response.url} failed with {response.status_code} code. "
-                           f"with text: {response.text} \n")
-                return False
+            error_file_path = f"{LOGS_PATH}/{time()}-postScraperError.txt"  # inserting the unix time stamp to clearify
+            log.fatal(f"scraping {response.url} failed with code {response.status_code}. "
+                      f"recording in {error_file_path}")
+            with open(error_file_path, 'w') as file:
+                file.write(response.text)
+            print(f"Scraping post {self.token} failed.")
+            return False
             # raise Exception(f"request to {response.url} failed with {response.status_code} code.")
 
         data = response.json()
-
         # sections stuff
         sections = data['sections']
         for section in sections:
