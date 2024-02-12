@@ -22,7 +22,7 @@ class Recorder:
 
     def __file_exsits(self) -> bool:
         # TODO write this shit
-        pass
+        return True
 
     def flush(self) -> None:
         """
@@ -43,7 +43,9 @@ class Recorder:
         :param post: Post object, to be used to record its data
         :return: None
         """
-        record = {**asdict(post), 'record_time': time()}  # adding the record_time to the post dict
+        record = {**asdict(post), 'record_time': str(time()).split(".")[0]} # adding the record_time to the post dict
+        del record['logger']
+
         self.logger.info(f"post <{post.token}> added to tank", __name__)
         self.tank.append(record)
         if len(self.tank) >= self.tank_size:
