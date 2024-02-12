@@ -8,10 +8,11 @@ class Explorer:
     def __init__(self, logger, category: str, districts: list, city='tehran', ):
         """
         Explorer object. Handles methods on exploring and extracting data.
-        params:
-            category: category name of posts. the acceptable list is in categories.json
-            districts: list of enums . which is a code for divar for each district. go to tehran.json to read the enums
-            city: tehran is ONLY supported now #TODO check the readme.txt for the problem of other cities.
+
+        :param logger: Logger object to trigger logging
+        :param category: category name of posts. the acceptable list is in categories.json
+        :param districts: list of enums . which is a code for divar for each district. go to tehran.json to read the enums
+        :param city: tehran is ONLY supported now #TODO check the readme.txt for the problem of other cities.
         """
 
         self.city = city
@@ -20,6 +21,10 @@ class Explorer:
         self.logger = logger
 
     def __initial_lastPostDate(self) -> int:
+        """
+
+        :return: lastPotDate from the initial get request to divar.ir, used internallhy to get pages of posts
+        """
         _cookies = {
             'did': '80dce4fa-1571-4f8b-b8ec-986b57261433',
             'multi-city': 'tehran%7C',
@@ -92,9 +97,10 @@ class Explorer:
     def explore(self, request_sleep: int = 1, token_limit: int = 100) -> list[str]:
         """
         gets the available post tokens in the given category, city and districts.
-        params:
-            request_sleep: cooldown time between requests to api.divar.ir to prevent IP ban problems
-        returns: list of extracted tokens
+
+        :param request_sleep: cooldown time between requests to api.divar.ir to prevent IP ban problems
+        :param token_limit: maximum number of tokens before ending the exploration
+        :return: a list of tokens
         """
         cookies = {
             'did': '80dce4fa-1571-4f8b-b8ec-986b57261433',
