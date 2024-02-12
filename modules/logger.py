@@ -8,7 +8,7 @@ class Logger:
         """
         The logger object to handle logging requests
         """
-        self.log_file = LOGS_PATH + str(time()).split()[0] + ".log"
+        self.log_file = LOGS_PATH + str(time()).split('.')[0] + ".log"
 
         logging.basicConfig(filename=self.log_file, level=logging.INFO,
                             format=f'%(asctime)s - %(message)s',
