@@ -1,31 +1,30 @@
 import requests
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .configs import *
 from time import time
+from .logger import Logger
 
 
 @dataclass
 class Post:
-    def __init__(self, logger, token):
-        self.token = token
-        self.persian_district: str = ''
-        self.category: str = ''
-        self.parent_category: str = ''
-        self.phone_number: str = ''
-        self.persian_title: str = ''
-        self.is_business: bool = False
-        self.location: tuple = ()
-        self.persian_subtitle: str = ''
-        self.url: str = ''
-        self.business_data: list = []
-        self.gparent_category: str = ''
-        self.city: str = ''
-        self.price: int = 0
-        self.persian_category: str = ''
-        self.persian_city: str = ''
-        self.persian_description: str = ''
-
-        self.logger = logger
+    logger: Logger
+    token: str
+    persian_district: str = ''
+    category: str = ''
+    parent_category: str = ''
+    phone_number: str = ''
+    persian_title: str = ''
+    is_business: bool = False
+    location: tuple = ()
+    persian_subtitle: str = ''
+    url: str = ''
+    business_data: list = field(default_factory=list)
+    gparent_category: str = ''
+    city: str = ''
+    price: int = 0
+    persian_category: str = ''
+    persian_city: str = ''
+    persian_description: str = ''
 
     def __get_phone_number(self, auth_key):
         base_url = 'https://api.divar.ir/v8/postcontact/web/contact_info/'
