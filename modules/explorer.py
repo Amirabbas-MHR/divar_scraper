@@ -187,8 +187,8 @@ class Explorer:
             # check if request was successful
             if response.status_code != 200:
                 error_file_path = f"{LOGS_PATH}/{time()}-getPostsPageError.txt"  # inserting the unix time stamp to  clearify
-                log.fatal(
-                    f"getting posts page failed with code {response.status_code}. response in: {error_file_path}")
+                self.logger.fatal(
+                    f"getting posts page failed with code {response.status_code}. response in: {error_file_path}", __name__)
                 with open(error_file_path, 'w') as file:
                     file.write(response.text)
                 # TODO should this be raise an exception or just handle it another way?
